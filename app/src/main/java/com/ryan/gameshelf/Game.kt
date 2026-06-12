@@ -11,9 +11,12 @@ data class Game(
     val name: String,
     val summary: String? = "Aucun résumé disponible.",
     val cover: Cover? = null,
-    val category: Int = 0
+    val category: Int = 0,
+    val first_release_date: Long? = null
 ) {
-    val id: Int
+    companion object{
+        private var id = 0
+    }
     var favorite by mutableStateOf(false)
     var played: Boolean = false
     var playing: Boolean = false
@@ -34,14 +37,10 @@ data class Game(
         }
 
     init{
-        idcounter ++
-        id = idcounter
-    }
-    companion object{
-        private var idcounter = 0
+        id += 1
     }
 
-    public fun toggleFav(){
+    fun toggleFav(){
         this.favorite = !this.favorite
     }
 }

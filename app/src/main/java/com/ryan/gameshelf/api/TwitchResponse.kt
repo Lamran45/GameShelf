@@ -1,4 +1,5 @@
-package com.ryan.gameshelf
+package com.ryan.gameshelf.api
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

@@ -1,10 +1,12 @@
-package com.ryan.gameshelf
+package com.ryan.gameshelf.api
 
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.serialization.kotlinx.json.*
+import com.ryan.gameshelf.BuildConfig
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 class AuthService {
@@ -13,7 +15,7 @@ class AuthService {
     private val client = HttpClient {
         install(ContentNegotiation) {
             json(Json {
-                ignoreUnknownKeys = true // Évite de crash si l'API renvoie des infos dont on n'a pas besoin
+                ignoreUnknownKeys = true
             })
         }
     }
