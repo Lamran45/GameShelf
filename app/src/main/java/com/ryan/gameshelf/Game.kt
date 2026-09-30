@@ -5,6 +5,29 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+@Serializable
+data class Platform(
+    val id: Long = 0,
+    val name: String = ""
+)
+
+@Serializable
+data class Company(
+    val id: Long = 0,
+    val name: String = ""
+)
+
+@Serializable
+data class InvolvedCompany(
+    val id: Long = 0,
+    val company: Company? = null,
+    val developer: Boolean = false,
+    val publisher: Boolean = false
+)
 
 @Serializable
 data class Game(
@@ -12,18 +35,21 @@ data class Game(
     val summary: String? = "Aucun résumé disponible.",
     val cover: Cover? = null,
     val category: Int = 0,
-    val first_release_date: Long? = null
+    val first_release_date: Long? = null,
+    val platforms: List<Platform>? = null,
+    val involved_companies: List<InvolvedCompany>? = null
 ) {
     companion object{
         private var id = 0
     }
     var favorite by mutableStateOf(false)
+    var inCollection by mutableStateOf(false)
     var played: Boolean = false
     var playing: Boolean = false
     var bought: Boolean = false
     var wished: Boolean = false
 
-    // Attribut pour la récupération du type de Jeu
+    // Attribut pour la récupération du type de jeu
     val categoryLabel: String
         get() = when (category) {
             0 -> "Jeu complet"
@@ -36,12 +62,61 @@ data class Game(
             else -> "Autre" // Pour couvrir les mods, portages, etc.
         }
 
+    val formattedReleaseDate: String
+        get() {
+            if (first_release_date == null) return "Non communiquée"
+            return try {
+                val sdf = SimpleDateFormat("dd MMMM yyyy", Locale.FRENCH)
+                sdf.format(Date(first_release_date * 1000))
+            } catch (e: Exception){
+                "Non communiquée"
+            }
+        }
+
+    val platformsListFormatted: String
+        get() {
+            if (platforms.isNullOrEmpty()) return "Non spécifié"
+            return platforms.joinToString(", ") { it.name }
+        }
+
+    val developerName: String
+        get() {
+            val devs = involved_companies?.filter { it.developer }?.mapNotNull { it.company?.name }
+            if (!devs.isNullOrEmpty()) return devs.joinToString(", ")
+            val anyComp = involved_companies?.mapNotNull { it.company?.name }
+            if (!anyComp.isNullOrEmpty()) return anyComp.joinToString(", ")
+            return "Non spécifié"
+        }
+
+    val publisherName: String
+        get() {
+            val pubs = involved_companies?.filter { it.publisher }?.mapNotNull { it.company?.name }
+            if (!pubs.isNullOrEmpty()) return pubs.joinToString(", ")
+            return "Non spécifié"
+        }
+
     init{
         id += 1
     }
 
-    fun toggleFav(){
+    fun toggleFav(user: User){
         this.favorite = !this.favorite
+        println("Salut")
+        if(this.favorite){
+            user.favorites.add(this)
+            println(user.favorites)
+        } else {
+            user.favorites.remove(this)
+        }
+    }
+
+    fun toggleCollection(user: User){
+        this.inCollection = !this.inCollection
+        if(this.inCollection){
+            user.collection.add(this)
+        } else {
+            user.collection.remove(this)
+        }
     }
 }
 

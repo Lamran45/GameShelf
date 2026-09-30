@@ -1,0 +1,344 @@
+package com.ryan.gameshelf.ui
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.ryan.gameshelf.Cover
+import com.ryan.gameshelf.Game
+import com.ryan.gameshelf.Platform
+import com.ryan.gameshelf.R
+import com.ryan.gameshelf.User
+
+@Composable
+fun GameDetailScreen(
+    game: Game,
+    user: User,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scrollState = rememberScrollState()
+    val blueAccent = Color(0xFF2196F3)
+    val darkBackground = Color(0xFF121212)
+    val cardBackground = Color(0xFF1E1E1E)
+    val pinkAccent = Color(0xFFF8BADC)
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(darkBackground)
+            .padding(16.dp)
+            .verticalScroll(scrollState)
+    ) {
+        // --- Barre supérieure avec bouton Retour ---
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        ) {
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier
+                    .size(40.dp)
+                    .border(BorderStroke(1.5.dp, blueAccent), CircleShape)
+                    .clip(CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Retour",
+                    tint = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Text(
+                text = "Détails du jeu",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+
+        // --- Jaquette du jeu ---
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .width(190.dp)
+                .aspectRatio(0.72f)
+                .border(BorderStroke(2.dp, blueAccent), RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(14.dp))
+        ) {
+            val imageUrl = game.cover?.getUrl() ?: "https://images.igdb.com/igdb/image/upload/t_cover_big/nocover.jpg"
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "Jaquette de ${game.name}",
+                placeholder = painterResource(id = R.drawable.test_cover),
+                error = painterResource(id = R.drawable.test_cover),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // --- Titre et Sous-titre ---
+        Text(
+            text = game.name,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Text(
+            text = "${game.categoryLabel} • ${game.formattedReleaseDate}",
+            fontSize = 14.sp,
+            color = Color(0xFFB0BEC5),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp, bottom = 16.dp)
+        )
+
+        // --- Boutons d'Action (Collection & Favori) ---
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            // Bouton Collection
+            Button(
+                onClick = { game.toggleCollection(user) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (game.inCollection) blueAccent else Color.Transparent,
+                    contentColor = Color.White
+                ),
+                border = BorderStroke(1.5.dp, blueAccent),
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = if (game.inCollection) Icons.Filled.Check else Icons.Filled.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = if (game.inCollection) "DANS LA COLLECTION" else "COLLECTION",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // Bouton Favori
+            Button(
+                onClick = { game.toggleFav(user) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (game.favorite) pinkAccent else Color.Transparent,
+                    contentColor = if (game.favorite) Color.Black else Color.White
+                ),
+                border = BorderStroke(1.5.dp, if (game.favorite) pinkAccent else blueAccent),
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = if (game.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = null,
+                    tint = if (game.favorite) Color.Red else Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "FAVORI",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // --- Fiches d'Informations (Plateformes, Éditeur, Date) ---
+        Text(
+            text = "Informations",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = cardBackground),
+            border = BorderStroke(1.dp, blueAccent.copy(alpha = 0.6f)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                InfoRow(
+                    icon = Icons.Filled.Tv,
+                    label = "Plateformes",
+                    value = game.platformsListFormatted,
+                    blueAccent = blueAccent
+                )
+
+                HorizontalDivider(color = blueAccent.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+
+                InfoRow(
+                    icon = Icons.Filled.Code,
+                    label = "Développeur",
+                    value = game.developerName,
+                    blueAccent = blueAccent
+                )
+
+                HorizontalDivider(color = blueAccent.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+
+                InfoRow(
+                    icon = Icons.Filled.Code,
+                    label = "Editeur",
+                    value = game.publisherName,
+                    blueAccent = blueAccent
+                )
+
+                HorizontalDivider(color = blueAccent.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+
+                InfoRow(
+                    icon = Icons.Filled.CalendarToday,
+                    label = "Date de sortie",
+                    value = game.formattedReleaseDate,
+                    blueAccent = blueAccent
+                )
+
+                HorizontalDivider(color = blueAccent.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+
+                InfoRow(
+                    icon = Icons.Filled.Category,
+                    label = "Type",
+                    value = game.categoryLabel,
+                    blueAccent = blueAccent
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // --- Section Résumé ---
+        Text(
+            text = "Résumé",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = cardBackground),
+            border = BorderStroke(1.dp, blueAccent.copy(alpha = 0.6f)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = game.summary ?: "Aucun résumé disponible pour ce jeu.",
+                fontSize = 14.sp,
+                color = Color(0xFFECEFF1),
+                lineHeight = 20.sp,
+                modifier = Modifier.padding(14.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun InfoRow(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    blueAccent: Color
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = blueAccent,
+            modifier = Modifier.size(20.dp)
+        )
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        Column {
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                color = Color(0xFFB0BEC5)
+            )
+            Text(
+                text = value,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GameDetailPreview() {
+    val fakeCover = Cover(id = 123, imageId = "co5v9f")
+    val fakePlatforms = listOf(
+        Platform(1, "PlayStation 5"),
+        Platform(2, "PC (Microsoft Windows)"),
+        Platform(3, "Xbox Series X/S")
+    )
+    val fakeGame = Game(
+        name = "Tekken 8",
+        summary = "Le dernier né de la saga de jeux de combat légendaire avec des graphismes époustouflants et un tout nouveau système de combat 'Heat' pour une agressivité maximale.",
+        cover = fakeCover,
+        category = 0,
+        first_release_date = 1706227200,
+        platforms = fakePlatforms
+    )
+    val fakeUser = User("Lamran")
+
+    GameDetailScreen(
+        game = fakeGame,
+        user = fakeUser,
+        onBackClick = {}
+    )
+}

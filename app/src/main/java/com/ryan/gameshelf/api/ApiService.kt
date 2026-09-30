@@ -42,7 +42,7 @@ class ApiService (val authserv: AuthService) {
                 header("Authorization", "Bearer $accessToken")
 
                 // 2. On écrit la requête textuelle exigée par IGDB pour filtrer les données
-                setBody("search \"$gameName\"; fields name, summary, cover.image_id, first_release_date; limit 10;")
+                setBody("search \"$gameName\"; fields name, summary, cover.image_id, category, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher; limit 30;")
             }.body()
 
             response
@@ -61,7 +61,7 @@ class ApiService (val authserv: AuthService) {
         //Il y a environ 3 mois
         val oneMonthLaterTimeStamp = currentTimestampSeconds + 2592000
         val threeMonthsAgoTimestamp = currentTimestampSeconds - 15552000
-        val igdbQueryHome = "fields name, summary, cover.image_id, first_release_date; limit 20; offset $offset; where first_release_date != null & first_release_date <= $oneMonthLaterTimeStamp & first_release_date >= $threeMonthsAgoTimestamp & hypes > 5;"
+        val igdbQueryHome = "fields name, summary, cover.image_id, category, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher; limit 20; offset $offset; where first_release_date != null & first_release_date <= $oneMonthLaterTimeStamp & first_release_date >= $threeMonthsAgoTimestamp & hypes > 5;"
 
          try{
              val response: List<Game> = client.post(baseurlgame) {
