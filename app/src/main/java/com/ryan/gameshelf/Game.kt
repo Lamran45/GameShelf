@@ -36,14 +36,31 @@ data class GameType(
 )
 
 @Serializable
+data class Franchise(
+    val id: Long = 0,
+    val name: String = ""
+)
+
+@Serializable
+data class Genre(
+    val id: Long = 0,
+    val name: String = ""
+)
+
+@Serializable
 data class Game(
     val name: String,
     val summary: String? = "Aucun résumé disponible.",
     val cover: Cover? = null,
     val game_type: GameType? = null,
+    val franchise: Franchise? = null,
+    val franchises: List<Franchise>? = null,
+    val genres: List<Genre>? = null,
     val first_release_date: Long? = null,
     val platforms: List<Platform>? = null,
-    val involved_companies: List<InvolvedCompany>? = null
+    val involved_companies: List<InvolvedCompany>? = null,
+    val expansions: List<Game>? = null,
+    val rating: Double = 0.0
 ) {
     companion object{
         private var id = 0
@@ -58,6 +75,19 @@ data class Game(
     // Attribut pour la récupération du type de jeu
     val categoryLabel: String
         get() = game_type?.type ?: "Complet"
+
+    val franchiseName: String
+        get() {
+            if (franchise != null && franchise.name.isNotEmpty()) return franchise.name
+            if (!franchises.isNullOrEmpty()) return franchises.joinToString(", ") { it.name }
+            return "Non spécifiée"
+        }
+
+    val genresListFormatted: String
+        get() {
+            if (genres.isNullOrEmpty()) return "Non spécifié"
+            return genres.joinToString(", ") { it.name }
+        }
 
     val formattedReleaseDate: String
         get() {

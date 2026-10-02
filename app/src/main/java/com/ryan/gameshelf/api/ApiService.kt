@@ -38,7 +38,7 @@ class ApiService (val authserv: AuthService) {
         val cleanQuery = gameName.trim().replace("\"", "").replace(";", "")
         if (cleanQuery.isEmpty()) return emptyList()
 
-        val fields = "fields name, summary, cover.image_id, game_type.type, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher; limit 30;"
+        val fields = "fields name, summary, cover.image_id, game_type.type, franchise.name, genres.name, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, expansions, rating; limit 30;"
 
         return try {
             // Recherche LIKE (pattern matching insensible à la casse : WHERE name ILIKE '%query%')
@@ -66,7 +66,7 @@ class ApiService (val authserv: AuthService) {
         //Il y a environ 3 mois
         val oneMonthLaterTimeStamp = currentTimestampSeconds + 2592000
         val threeMonthsAgoTimestamp = currentTimestampSeconds - 15552000
-        val igdbQueryHome = "fields name, summary, cover.image_id, game_type.type, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher; limit 20; offset $offset; where first_release_date != null & first_release_date <= $oneMonthLaterTimeStamp & first_release_date >= $threeMonthsAgoTimestamp & hypes > 5;"
+        val igdbQueryHome = "fields name, summary, cover.image_id, game_type.type, franchise.name, genres.name, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, expansions, rating; limit 20; offset $offset; where first_release_date != null & first_release_date <= $oneMonthLaterTimeStamp & first_release_date >= $threeMonthsAgoTimestamp & hypes > 5;"
 
          try{
              val response: List<Game> = client.post(baseurlgame) {

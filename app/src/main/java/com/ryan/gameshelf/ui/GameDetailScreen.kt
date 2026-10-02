@@ -1,9 +1,11 @@
 package com.ryan.gameshelf.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +20,9 @@ import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Copyright
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.TypeSpecimen
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -37,6 +42,7 @@ import com.ryan.gameshelf.Game
 import com.ryan.gameshelf.R
 import com.ryan.gameshelf.User
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun GameDetailScreen(
     game: Game,
@@ -129,6 +135,27 @@ fun GameDetailScreen(
                 .fillMaxWidth()
                 .padding(top = 4.dp, bottom = 16.dp)
         )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Star,
+                contentDescription = null,
+                tint = blueAccent,
+                modifier = Modifier.size(20.dp)
+            )
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Text(
+                text = String.format("%.1f", game.rating) + "%",
+                color = blueAccent,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
         // --- Boutons d'Action (Collection & Favori) ---
         Row(
@@ -225,7 +252,7 @@ fun GameDetailScreen(
 
                 InfoRow(
                     icon = Icons.Filled.Business,
-                    label = "Editeur",
+                    label = "Éditeur",
                     value = game.publisherName,
                     blueAccent = blueAccent
                 )
@@ -245,6 +272,24 @@ fun GameDetailScreen(
                     icon = Icons.Filled.Category,
                     label = "Type",
                     value = game.categoryLabel,
+                    blueAccent = blueAccent
+                )
+
+                HorizontalDivider(color = blueAccent.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+
+                InfoRow(
+                    icon = Icons.Filled.Copyright,
+                    label = "Franchise",
+                    value = game.franchiseName,
+                    blueAccent = blueAccent
+                )
+
+                HorizontalDivider(color = blueAccent.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+
+                InfoRow(
+                    icon = Icons.Filled.TypeSpecimen,
+                    label = "Genre(s)",
+                    value = game.genresListFormatted,
                     blueAccent = blueAccent
                 )
             }
