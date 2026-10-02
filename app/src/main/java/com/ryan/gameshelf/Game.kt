@@ -30,11 +30,17 @@ data class InvolvedCompany(
 )
 
 @Serializable
+data class GameType(
+    val id: Long = 0,
+    val type: String = ""
+)
+
+@Serializable
 data class Game(
     val name: String,
     val summary: String? = "Aucun résumé disponible.",
     val cover: Cover? = null,
-    val category: Int = 0,
+    val game_type: GameType? = null,
     val first_release_date: Long? = null,
     val platforms: List<Platform>? = null,
     val involved_companies: List<InvolvedCompany>? = null
@@ -51,16 +57,7 @@ data class Game(
 
     // Attribut pour la récupération du type de jeu
     val categoryLabel: String
-        get() = when (category) {
-            0 -> "Jeu complet"
-            1 -> "DLC"
-            2 -> "Extension"
-            3 -> "Bundle"
-            4 -> "Extension Standalone"
-            8 -> "Remake"
-            9 -> "Remaster"
-            else -> "Autre" // Pour couvrir les mods, portages, etc.
-        }
+        get() = game_type?.type ?: "Complet"
 
     val formattedReleaseDate: String
         get() {

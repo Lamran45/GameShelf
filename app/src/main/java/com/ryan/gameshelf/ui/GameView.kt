@@ -54,4 +54,14 @@ class GameView(private val apiserv: ApiService): ViewModel(){
             }
         }
     }
+
+    suspend fun searchGames(query: String): List<Game> {
+        if (query.trim().length < 3) return emptyList()
+        return try {
+            apiserv.searchGame(query.trim())
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
 }

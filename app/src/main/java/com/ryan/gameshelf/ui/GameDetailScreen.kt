@@ -30,13 +30,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.ryan.gameshelf.Cover
 import com.ryan.gameshelf.Game
-import com.ryan.gameshelf.Platform
 import com.ryan.gameshelf.R
 import com.ryan.gameshelf.User
 
@@ -227,7 +224,7 @@ fun GameDetailScreen(
                 HorizontalDivider(color = blueAccent.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
 
                 InfoRow(
-                    icon = Icons.Filled.Code,
+                    icon = Icons.Filled.Business,
                     label = "Editeur",
                     value = game.publisherName,
                     blueAccent = blueAccent
@@ -315,30 +312,4 @@ private fun InfoRow(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GameDetailPreview() {
-    val fakeCover = Cover(id = 123, imageId = "co5v9f")
-    val fakePlatforms = listOf(
-        Platform(1, "PlayStation 5"),
-        Platform(2, "PC (Microsoft Windows)"),
-        Platform(3, "Xbox Series X/S")
-    )
-    val fakeGame = Game(
-        name = "Tekken 8",
-        summary = "Le dernier né de la saga de jeux de combat légendaire avec des graphismes époustouflants et un tout nouveau système de combat 'Heat' pour une agressivité maximale.",
-        cover = fakeCover,
-        category = 0,
-        first_release_date = 1706227200,
-        platforms = fakePlatforms
-    )
-    val fakeUser = User("Lamran")
-
-    GameDetailScreen(
-        game = fakeGame,
-        user = fakeUser,
-        onBackClick = {}
-    )
 }
