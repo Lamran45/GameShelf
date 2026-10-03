@@ -38,7 +38,7 @@ class ApiService (val authserv: AuthService) {
         val cleanQuery = gameName.trim().replace("\"", "").replace(";", "")
         if (cleanQuery.isEmpty()) return emptyList()
 
-        val fields = "fields name, summary, cover.image_id, game_type.type, franchise.name, genres.name, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, expansions, rating; limit 30;"
+        val fields = "fields name, summary, cover.image_id, game_type.type, franchise.name, franchise.games, franchises.name, franchises.games, genres.name, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, dlcs, expansions, standalone_expansions, rating; limit 30;"
 
         return try {
             // Recherche LIKE (pattern matching insensible à la casse : WHERE name ILIKE '%query%')
@@ -66,7 +66,7 @@ class ApiService (val authserv: AuthService) {
         //Il y a environ 3 mois
         val oneMonthLaterTimeStamp = currentTimestampSeconds + 2592000
         val threeMonthsAgoTimestamp = currentTimestampSeconds - 15552000
-        val igdbQueryHome = "fields name, summary, cover.image_id, game_type.type, franchise.name, genres.name, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, expansions, rating; limit 20; offset $offset; where first_release_date != null & first_release_date <= $oneMonthLaterTimeStamp & first_release_date >= $threeMonthsAgoTimestamp & hypes > 5;"
+        val igdbQueryHome = "fields name, summary, cover.image_id, game_type.type, franchise.name, franchise.games, franchises.name, franchises.games, genres.name, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, dlcs, expansions, standalone_expansions, rating; limit 20; offset $offset; where first_release_date != null & first_release_date <= $oneMonthLaterTimeStamp & first_release_date >= $threeMonthsAgoTimestamp & hypes > 5;"
 
          try{
              val response: List<Game> = client.post(baseurlgame) {
@@ -83,5 +83,28 @@ class ApiService (val authserv: AuthService) {
              e.printStackTrace()
              return emptyList()
          }
+    }
+
+    suspend fun getGamesByIDs(ids : List<Long>): List<Game>{
+        if (ids.isEmpty()) return emptyList()
+        val idsString = ids.joinToString(",")
+        // Renvoie une liste de jeu correspondant aux IDs fournies
+        val fields = "fields name, summary, cover.image_id, game_type.type, franchise.name, franchise.games, franchises.name, franchises.games, genres.name, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, dlcs, expansions, standalone_expansions, rating; limit 50;"
+
+        return try {
+            val queryBody = "where id = ($idsString); $fields"
+
+            val response: List<Game> = client.post(baseurlgame) {
+                header("Client-ID", clientId)
+                header("Authorization", "Bearer $accessToken")
+                setBody(queryBody)
+            }.body()
+
+            response
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList() // On renvoie une liste vide si ça échoue
+        }
+
     }
 }

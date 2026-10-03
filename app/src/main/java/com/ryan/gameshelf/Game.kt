@@ -38,7 +38,8 @@ data class GameType(
 @Serializable
 data class Franchise(
     val id: Long = 0,
-    val name: String = ""
+    val name: String = "",
+    val games: List<Long>? = null
 )
 
 @Serializable
@@ -59,7 +60,9 @@ data class Game(
     val first_release_date: Long? = null,
     val platforms: List<Platform>? = null,
     val involved_companies: List<InvolvedCompany>? = null,
-    val expansions: List<Game>? = null,
+    val dlcs: List<Long>? = null,
+    val expansions: List<Long>? = null,
+    val standalone_expansions: List<Long>? = null,
     val rating: Double = 0.0
 ) {
     companion object{
@@ -120,6 +123,23 @@ data class Game(
             val pubs = involved_companies?.filter { it.publisher }?.mapNotNull { it.company?.name }
             if (!pubs.isNullOrEmpty()) return pubs.joinToString(", ")
             return "Non spécifié"
+        }
+
+    val franchiseGamesIds: List<Long>
+        get() {
+            val ids = mutableListOf<Long>()
+            franchise?.games?.let { ids.addAll(it) }
+            franchises?.forEach { fr -> fr.games?.let { ids.addAll(it) } }
+            return ids.distinct()
+        }
+
+    val dlcGameIds: List<Long>
+        get() {
+            val ids = mutableListOf<Long>()
+            dlcs?.let { ids.addAll(it) }
+            expansions?.let { ids.addAll(it) }
+            standalone_expansions?.let { ids.addAll(it) }
+            return ids.distinct()
         }
 
     init{

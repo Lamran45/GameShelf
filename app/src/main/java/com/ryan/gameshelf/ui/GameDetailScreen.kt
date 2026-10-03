@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
@@ -48,6 +49,7 @@ fun GameDetailScreen(
     game: Game,
     user: User,
     onBackClick: () -> Unit,
+    onGameGroupClick: ((String, List<Long>) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -277,11 +279,15 @@ fun GameDetailScreen(
 
                 HorizontalDivider(color = blueAccent.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
 
+                val hasFranchiseGames = game.franchiseGamesIds.isNotEmpty()
                 InfoRow(
                     icon = Icons.Filled.Copyright,
                     label = "Franchise",
                     value = game.franchiseName,
-                    blueAccent = blueAccent
+                    blueAccent = blueAccent,
+                    onClick = if (hasFranchiseGames && onGameGroupClick != null) {
+                        { onGameGroupClick(game.franchiseName, game.franchiseGamesIds) }
+                    } else null
                 )
 
                 HorizontalDivider(color = blueAccent.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
@@ -292,6 +298,20 @@ fun GameDetailScreen(
                     value = game.genresListFormatted,
                     blueAccent = blueAccent
                 )
+
+                if (game.dlcGameIds.isNotEmpty()) {
+                    HorizontalDivider(color = blueAccent.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+
+                    InfoRow(
+                        icon = Icons.Filled.Add,
+                        label = "DLCs & Extensions",
+                        value = "${game.dlcGameIds.size} contenu(s) disponible(s)",
+                        blueAccent = blueAccent,
+                        onClick = if (onGameGroupClick != null) {
+                            { onGameGroupClick("DLCs & Extensions : ${game.name}", game.dlcGameIds) }
+                        } else null
+                    )
+                }
             }
         }
 
@@ -328,11 +348,16 @@ private fun InfoRow(
     icon: ImageVector,
     label: String,
     value: String,
-    blueAccent: Color
+    blueAccent: Color,
+    onClick: (() -> Unit)? = null
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null) Modifier.clickable { onClick() } else Modifier
+            )
     ) {
         Icon(
             imageVector = icon,
@@ -343,7 +368,7 @@ private fun InfoRow(
 
         Spacer(modifier = Modifier.width(10.dp))
 
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
                 fontSize = 12.sp,
@@ -353,7 +378,16 @@ private fun InfoRow(
                 text = value,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.White
+                color = if (onClick != null) blueAccent else Color.White
+            )
+        }
+
+        if (onClick != null) {
+            Text(
+                text = "▶",
+                fontSize = 12.sp,
+                color = blueAccent,
+                modifier = Modifier.padding(start = 4.dp)
             )
         }
     }

@@ -46,6 +46,7 @@ import com.ryan.gameshelf.api.ApiService
 import com.ryan.gameshelf.api.AuthService
 import com.ryan.gameshelf.ui.GameView
 import com.ryan.gameshelf.ui.GameDetailScreen
+import com.ryan.gameshelf.ui.GameGroupScreen
 import com.ryan.gameshelf.ui.SearchScreen
 
 val user = User("Lamran")
@@ -75,12 +76,27 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(viewModel: GameView, user: User) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedGame by remember { mutableStateOf<Game?>(null) }
+    var groupTitle by remember { mutableStateOf<String?>(null) }
+    var groupGameIds by remember { mutableStateOf<List<Long>>(emptyList()) }
 
-    if (selectedGame != null) {
+    if (groupTitle != null) {
+        GameGroupScreen(
+            title = groupTitle!!,
+            gameIds = groupGameIds,
+            viewModel = viewModel,
+            user = user,
+            onBackClick = { groupTitle = null },
+            onGameClick = { game -> selectedGame = game }
+        )
+    } else if (selectedGame != null) {
         GameDetailScreen(
             game = selectedGame!!,
             user = user,
-            onBackClick = { selectedGame = null }
+            onBackClick = { selectedGame = null },
+            onGameGroupClick = { title, ids ->
+                groupTitle = title
+                groupGameIds = ids
+            }
         )
     } else {
         Scaffold(
@@ -234,7 +250,7 @@ fun CollectionScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Votre collection est vide",
+                        text = "Votre collection est tristement vide...",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White,
@@ -242,7 +258,7 @@ fun CollectionScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Ajoutez des jeux depuis l'accueil en appuyant sur le bouton + bleu.",
+                        text = "Ajoutez des jeux depuis l'accueil en appuyant sur le bouton +.",
                         fontSize = 14.sp,
                         color = Color.Gray,
                         textAlign = TextAlign.Center

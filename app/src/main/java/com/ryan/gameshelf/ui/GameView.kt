@@ -64,4 +64,8 @@ class GameView(private val apiserv: ApiService): ViewModel(){
             emptyList()
         }
     }
+
+    suspend fun getGamesByIds(ids: List<Long>): List<Game> {
+        return apiserv.getGamesByIDs(ids)
+    }
 }
