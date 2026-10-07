@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Tv
@@ -309,6 +310,21 @@ fun GameDetailScreen(
                         blueAccent = blueAccent,
                         onClick = if (onGameGroupClick != null) {
                             { onGameGroupClick("DLCs & Extensions : ${game.name}", game.dlcGameIds) }
+                        } else null
+                    )
+                }
+
+
+                if (game.similar_games != null) {
+                    HorizontalDivider(color = blueAccent.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+
+                    InfoRow(
+                        icon = Icons.Filled.Album,
+                        label = "Jeux similaires",
+                        value = "${game.similar_games.size} jeu(x) similaire(s)",
+                        blueAccent = blueAccent,
+                        onClick = if (onGameGroupClick != null) {
+                            { onGameGroupClick("Jeux similaires : ${game.name}", game.similar_games) }
                         } else null
                     )
                 }

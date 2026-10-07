@@ -63,7 +63,8 @@ data class Game(
     val dlcs: List<Long>? = null,
     val expansions: List<Long>? = null,
     val standalone_expansions: List<Long>? = null,
-    val rating: Double = 0.0
+    val rating: Double = 0.0,
+    val similar_games: List<Long>? = null
 ) {
     companion object{
         private var id = 0
