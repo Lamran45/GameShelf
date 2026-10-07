@@ -50,6 +50,7 @@ data class Genre(
 
 @Serializable
 data class Game(
+    val id: Long = 0,
     val name: String,
     val summary: String? = "Aucun résumé disponible.",
     val cover: Cover? = null,
@@ -66,9 +67,6 @@ data class Game(
     val rating: Double = 0.0,
     val similar_games: List<Long>? = null
 ) {
-    companion object{
-        private var id = 0
-    }
     var favorite by mutableStateOf(false)
     var inCollection by mutableStateOf(false)
     var played: Boolean = false
@@ -143,27 +141,23 @@ data class Game(
             return ids.distinct()
         }
 
-    init{
-        id += 1
-    }
-
-    fun toggleFav(user: User){
-        this.favorite = !this.favorite
-        println("Salut")
-        if(this.favorite){
-            user.favorites.add(this)
-            println(user.favorites)
+    fun toggleFav(user: User) {
+        if (user.favorites.contains(id)) {
+            user.favorites.remove(id)
+            this.favorite = false
         } else {
-            user.favorites.remove(this)
+            user.favorites.add(id)
+            this.favorite = true
         }
     }
 
-    fun toggleCollection(user: User){
-        this.inCollection = !this.inCollection
-        if(this.inCollection){
-            user.collection.add(this)
+    fun toggleCollection(user: User) {
+        if (user.collection.contains(id)) {
+            user.collection.remove(id)
+            this.inCollection = false
         } else {
-            user.collection.remove(this)
+            user.collection.add(id)
+            this.inCollection = true
         }
     }
 }

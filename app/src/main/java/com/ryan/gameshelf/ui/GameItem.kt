@@ -33,6 +33,9 @@ fun GameItem(
     modifier: Modifier = Modifier,
     onGameClick: ((Game) -> Unit)? = null
 ) {
+    val isInCollection = user.collection.contains(game.id)
+    val isFavorite = user.favorites.contains(game.id)
+
     Column(
         modifier = modifier
             .padding(4.dp)
@@ -73,15 +76,15 @@ fun GameItem(
                         .padding(4.dp)
                 ) {
                     Icon(
-                        imageVector = if (game.inCollection) Icons.Filled.Check else Icons.Filled.Add,
-                        contentDescription = if (game.inCollection) "In library" else "Add to library",
+                        imageVector = if (isInCollection) Icons.Filled.Check else Icons.Filled.Add,
+                        contentDescription = if (isInCollection) "In library" else "Add to library",
                         tint = Color.White
                     )
                 }
 
                 // Bouton favoris
                 IconButton(
-                    onClick = { game.toggleFav(user)},
+                    onClick = { game.toggleFav(user) },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .size(35.dp)
@@ -90,7 +93,7 @@ fun GameItem(
                         .padding(4.dp)
                 ) {
                     Icon(
-                        imageVector = if(game.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = "Add to favorites",
                         tint = Color.White
                     )
@@ -123,11 +126,13 @@ fun GameItem(
 @Preview(showBackground = true)
 @Composable
 fun GamePreview() {
+    val fakeUser = User("Lamran")
     val fakeCover = Cover(id = 123, imageId = "co5v9f")
     val fakeGame = Game(
+        id = 1,
         name = "Tekken 8",
         summary = "Le dernier né de la saga de jeux de combat légendaire avec des graphismes époustouflants.",
         cover = fakeCover
     )
-    GameItem(user, game = fakeGame)
+    GameItem(fakeUser, game = fakeGame)
 }

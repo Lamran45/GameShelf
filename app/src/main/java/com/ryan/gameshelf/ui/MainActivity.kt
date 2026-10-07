@@ -30,6 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -177,6 +178,7 @@ fun MainScreen(viewModel: GameView, user: User) {
                     )
                     2 -> CollectionScreen(
                         user = user,
+                        viewModel = viewModel,
                         onGameClick = { game -> selectedGame = game }
                     )
 
@@ -217,8 +219,28 @@ fun GameHomeScreen(
 @Composable
 fun CollectionScreen(
     user: User,
+    viewModel: GameView,
     onGameClick: (Game) -> Unit
 ) {
+    var loadedGames by remember { mutableStateOf<List<Game>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(user.collection.toList()) {
+        val missingIds = user.collection.filter { id -> loadedGames.none { game -> game.id == id } }
+        if (missingIds.isNotEmpty()) {
+            if (loadedGames.isEmpty()) {
+                isLoading = true
+            }
+            val newGames = viewModel.getGamesByIds(missingIds)
+            loadedGames = loadedGames + newGames
+            isLoading = false
+        }
+    }
+
+    val displayedGames = remember(loadedGames, user.collection.toList()) {
+        loadedGames.filter { user.collection.contains(it.id) }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -232,7 +254,14 @@ fun CollectionScreen(
             modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
         )
 
-        if (user.collection.isEmpty()) {
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFF2196F3))
+            }
+        } else if (displayedGames.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -271,8 +300,7 @@ fun CollectionScreen(
                 contentPadding = PaddingValues(4.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(user.collection.size) { index ->
-                    val game = user.collection[index]
+                itemsIndexed(displayedGames) { _, game ->
                     GameItem(user, game, onGameClick = onGameClick)
                 }
             }
