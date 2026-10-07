@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +34,7 @@ fun GameItem(
     modifier: Modifier = Modifier,
     onGameClick: ((Game) -> Unit)? = null
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val isInCollection = user.collection.contains(game.id)
     val isFavorite = user.favorites.contains(game.id)
 
@@ -67,7 +69,7 @@ fun GameItem(
 
                 // Bouton d'ajout à la bibliothèque
                 IconButton(
-                    onClick = { game.toggleCollection(user) },
+                    onClick = { game.toggleCollection(user, coroutineScope) },
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .size(35.dp)
@@ -84,7 +86,7 @@ fun GameItem(
 
                 // Bouton favoris
                 IconButton(
-                    onClick = { game.toggleFav(user) },
+                    onClick = { game.toggleFav(user, coroutineScope) },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .size(35.dp)

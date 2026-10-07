@@ -30,6 +30,8 @@ android {
 
         buildConfigField("String", "CLIENTID", properties.getProperty("CLIENTID") ?: "\"\"")
         buildConfigField("String", "CLIENTSECRET", properties.getProperty("CLIENTSECRET") ?: "\"\"")
+        buildConfigField("String", "SUPABASE_URL", properties.getProperty("SUPABASE_URL") ?: "\"\"")
+        buildConfigField("String", "ANON_SUPABASE", properties.getProperty("ANON_SUPABASE") ?: "\"\"")
     }
 
     buildTypes {
@@ -67,12 +69,13 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    // Ktor : Pour faire les requêtes HTTP (Alternative moderne à Retrofit)
+
+    // Ktor : Versions stables (utilise OkHttp 4.x stable)
     implementation("io.ktor:ktor-client-core:2.3.11")
     implementation("io.ktor:ktor-client-android:2.3.11")
     implementation("io.ktor:ktor-client-content-negotiation:2.3.11")
 
-    // Pour convertir le JSON d'IGDB en objets Kotlin automatiquement
+    // Serialization
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.11")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
@@ -80,4 +83,9 @@ dependencies {
 
     // Import d'icones
     implementation("androidx.compose.material:material-icons-extended")
+
+    // Supabase Kotlin SDK
+    implementation("io.github.jan-tennert.supabase:gotrue-kt:2.6.1")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:2.6.1")
+    implementation("io.github.jan-tennert.supabase:realtime-kt:2.6.1")
 }

@@ -1,5 +1,6 @@
 package com.ryan.gameshelf
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,6 +32,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,12 +47,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ryan.gameshelf.api.ApiService
 import com.ryan.gameshelf.api.AuthService
-import com.ryan.gameshelf.ui.GameView
+import com.ryan.gameshelf.api.UserRepository
+import com.ryan.gameshelf.api.supabase
+import com.ryan.gameshelf.ui.AuthScreen
 import com.ryan.gameshelf.ui.GameDetailScreen
 import com.ryan.gameshelf.ui.GameGroupScreen
+import com.ryan.gameshelf.ui.GameView
 import com.ryan.gameshelf.ui.SearchScreen
-
-val user = User("Lamran")
+import io.github.jan.supabase.gotrue.SessionStatus
+import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.gotrue.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,16 +66,48 @@ class MainActivity : ComponentActivity() {
         val viewModel = GameView(apiService)
         viewModel.init()
 
+        supabase.handleDeeplinks(intent)
+
         setContent {
+            val sessionStatus by supabase.auth.sessionStatus.collectAsState()
+
+            val loggedInUser = remember(sessionStatus) {
+                when (val status = sessionStatus) {
+                    is SessionStatus.Authenticated -> {
+                        val session = status.session
+                        User(
+                            uuid = session.user?.id ?: "",
+                            name = session.user?.email?.substringBefore("@") ?: "Joueur"
+                        )
+                    }
+                    else -> null
+                }
+            }
+
+            LaunchedEffect(loggedInUser?.uuid) {
+                loggedInUser?.let { u ->
+                    UserRepository.loadUserGames(u)
+                }
+            }
+
             MaterialTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.Black
-                ){
-                    MainScreen(viewModel, user)
+                ) {
+                    if (loggedInUser == null) {
+                        AuthScreen()
+                    } else {
+                        MainScreen(viewModel, loggedInUser)
+                    }
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        supabase.handleDeeplinks(intent)
     }
 }
 
@@ -170,10 +208,12 @@ fun MainScreen(viewModel: GameView, user: User) {
                 when (selectedTab) {
                     0 -> GameHomeScreen(
                         viewModel = viewModel,
+                        user = user,
                         onGameClick = { game -> selectedGame = game }
                     )
                     1 -> SearchScreen(
                         viewModel = viewModel,
+                        user = user,
                         onGameClick = { game -> selectedGame = game }
                     )
                     2 -> CollectionScreen(
@@ -191,6 +231,7 @@ fun MainScreen(viewModel: GameView, user: User) {
 @Composable
 fun GameHomeScreen(
     viewModel: GameView,
+    user: User,
     onGameClick: (Game) -> Unit
 ) {
     if (viewModel.gameslist.isEmpty()) {

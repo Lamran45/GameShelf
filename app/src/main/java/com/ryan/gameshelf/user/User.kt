@@ -8,5 +8,5 @@ data class User(
     var name: String,
     var favorites: MutableList<Long> = mutableStateListOf<Long>(),
     var collection: MutableList<Long> = mutableStateListOf<Long>(),
-    val id: Int = 1,
+    val uuid: String = ""
 )

@@ -20,7 +20,7 @@ class AuthService {
         }
     }
 
-    // Remplace par tes vraies clés récupérées sur Twitch
+    // Clé twitch
     private val clientId = BuildConfig.CLIENTID
     private val clientSecret = BuildConfig.CLIENTSECRET
 

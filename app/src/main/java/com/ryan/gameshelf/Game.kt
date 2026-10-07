@@ -3,6 +3,9 @@ package com.ryan.gameshelf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.ryan.gameshelf.api.UserRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.text.SimpleDateFormat
@@ -141,7 +144,7 @@ data class Game(
             return ids.distinct()
         }
 
-    fun toggleFav(user: User) {
+    fun toggleFav(user: User, coroutineScope: CoroutineScope? = null) {
         if (user.favorites.contains(id)) {
             user.favorites.remove(id)
             this.favorite = false
@@ -149,15 +152,21 @@ data class Game(
             user.favorites.add(id)
             this.favorite = true
         }
+        coroutineScope?.launch {
+            UserRepository.syncGameStatus(user, id)
+        }
     }
 
-    fun toggleCollection(user: User) {
+    fun toggleCollection(user: User, coroutineScope: CoroutineScope? = null) {
         if (user.collection.contains(id)) {
             user.collection.remove(id)
             this.inCollection = false
         } else {
             user.collection.add(id)
             this.inCollection = true
+        }
+        coroutineScope?.launch {
+            UserRepository.syncGameStatus(user, id)
         }
     }
 }

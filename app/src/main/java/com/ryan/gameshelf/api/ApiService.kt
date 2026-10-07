@@ -63,10 +63,10 @@ class ApiService (val authserv: AuthService) {
         if(!requestGameavailability) return emptyList()
 
         val currentTimestampSeconds = System.currentTimeMillis() / 1000
-        //Il y a environ 3 mois
-        val oneMonthLaterTimeStamp = currentTimestampSeconds + 2592000
+        //Il y a environ 3 mois et trois mois plus tard
+        val threeMonthLaterTimeStamp = currentTimestampSeconds + 15552000
         val threeMonthsAgoTimestamp = currentTimestampSeconds - 15552000
-        val igdbQueryHome = "fields id, name, summary, cover.image_id, game_type.type, franchise.name, franchise.games, franchises.name, franchises.games, genres.name, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, dlcs, expansions, standalone_expansions, rating, similar_games; limit 20; offset $offset; where first_release_date != null & first_release_date <= $oneMonthLaterTimeStamp & first_release_date >= $threeMonthsAgoTimestamp & hypes > 5;"
+        val igdbQueryHome = "fields id, name, summary, cover.image_id, game_type.type, franchise.name, franchise.games, franchises.name, franchises.games, genres.name, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, dlcs, expansions, standalone_expansions, rating, similar_games; limit 20; offset $offset; where first_release_date != null & first_release_date <= $threeMonthLaterTimeStamp & first_release_date >= $threeMonthsAgoTimestamp & hypes > 5;"
 
          try{
              val response: List<Game> = client.post(baseurlgame) {

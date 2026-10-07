@@ -29,9 +29,9 @@ import kotlinx.coroutines.delay
 @Composable
 fun SearchScreen(
     viewModel: GameView,
+    user: User,
     onGameClick: (Game) -> Unit,
     modifier: Modifier = Modifier,
-    user: User = com.ryan.gameshelf.user,
     onSearch: (String) -> Unit = {},
 ) {
     var query by rememberSaveable { mutableStateOf("") }

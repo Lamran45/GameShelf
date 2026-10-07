@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.TypeSpecimen
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +55,7 @@ fun GameDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
     val blueAccent = Color(0xFF2196F3)
     val darkBackground = Color(0xFF121212)
     val cardBackground = Color(0xFF1E1E1E)
@@ -160,6 +162,9 @@ fun GameDetailScreen(
             )
         }
 
+        val isInCollection = user.collection.contains(game.id)
+        val isFavorite = user.favorites.contains(game.id)
+
         // --- Boutons d'Action (Collection & Favori) ---
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -169,9 +174,9 @@ fun GameDetailScreen(
         ) {
             // Bouton Collection
             Button(
-                onClick = { game.toggleCollection(user) },
+                onClick = { game.toggleCollection(user, coroutineScope) },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (game.inCollection) blueAccent else Color.Transparent,
+                    containerColor = if (isInCollection) blueAccent else Color.Transparent,
                     contentColor = Color.White
                 ),
                 border = BorderStroke(1.5.dp, blueAccent),
@@ -179,13 +184,13 @@ fun GameDetailScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
-                    imageVector = if (game.inCollection) Icons.Filled.Check else Icons.Filled.Add,
+                    imageVector = if (isInCollection) Icons.Filled.Check else Icons.Filled.Add,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = if (game.inCollection) "DANS LA COLLECTION" else "COLLECTION",
+                    text = if (isInCollection) "DANS LA COLLECTION" else "COLLECTION",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -193,19 +198,19 @@ fun GameDetailScreen(
 
             // Bouton Favori
             Button(
-                onClick = { game.toggleFav(user) },
+                onClick = { game.toggleFav(user, coroutineScope) },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (game.favorite) pinkAccent else Color.Transparent,
-                    contentColor = if (game.favorite) Color.Black else Color.White
+                    containerColor = if (isFavorite) pinkAccent else Color.Transparent,
+                    contentColor = if (isFavorite) Color.Black else Color.White
                 ),
-                border = BorderStroke(1.5.dp, if (game.favorite) pinkAccent else blueAccent),
+                border = BorderStroke(1.5.dp, if (isFavorite) pinkAccent else blueAccent),
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
-                    imageVector = if (game.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = null,
-                    tint = if (game.favorite) Color.Red else Color.White,
+                    tint = if (isFavorite) Color.Red else Color.White,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
