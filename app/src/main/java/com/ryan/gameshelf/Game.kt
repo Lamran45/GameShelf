@@ -169,6 +169,19 @@ data class Game(
             UserRepository.syncGameStatus(user, id)
         }
     }
+
+    fun toggleWishlist(user: User, coroutineScope: CoroutineScope? = null) {
+        if (user.wishlist.contains(id)) {
+            user.wishlist.remove(id)
+            this.wished = false
+        } else {
+            user.wishlist.add(id)
+            this.wished = true
+        }
+        coroutineScope?.launch {
+            UserRepository.syncGameStatus(user, id)
+        }
+    }
 }
 
 

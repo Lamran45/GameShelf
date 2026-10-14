@@ -12,7 +12,11 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,6 +30,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.ryan.gameshelf.api.UserRepository
+import com.ryan.gameshelf.ui.AddToCollectionDialog
+import kotlinx.coroutines.launch
+
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.outlined.BookmarkBorder
 
 @Composable
 fun GameItem(
@@ -37,6 +47,37 @@ fun GameItem(
     val coroutineScope = rememberCoroutineScope()
     val isInCollection = user.collection.contains(game.id)
     val isFavorite = user.favorites.contains(game.id)
+    val isWishlisted = user.wishlist.contains(game.id)
+    var showCollectionDialog by remember { mutableStateOf(false) }
+
+    if (showCollectionDialog) {
+        AddToCollectionDialog(
+            game = game,
+            user = user,
+            onDismiss = { showCollectionDialog = false },
+            onSave = { platform, isPhysical, gameState, borrowed ->
+                showCollectionDialog = false
+                game.inCollection = true
+                coroutineScope.launch {
+                    UserRepository.saveUserGameDetails(
+                        user = user,
+                        gameId = game.id,
+                        platform = platform,
+                        isPhysical = isPhysical,
+                        gameState = gameState,
+                        borrowed = borrowed
+                    )
+                }
+            },
+            onRemove = {
+                showCollectionDialog = false
+                game.inCollection = false
+                coroutineScope.launch {
+                    UserRepository.removeFromCollection(user, game.id)
+                }
+            }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -69,7 +110,7 @@ fun GameItem(
 
                 // Bouton d'ajout à la bibliothèque
                 IconButton(
-                    onClick = { game.toggleCollection(user, coroutineScope) },
+                    onClick = { showCollectionDialog = true },
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .size(35.dp)
@@ -97,6 +138,24 @@ fun GameItem(
                     Icon(
                         imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = "Add to favorites",
+                        tint = Color.White
+                    )
+                }
+
+                // Bouton Wishlist
+                IconButton(
+                    onClick = { game.toggleWishlist(user, coroutineScope) },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(4.dp)
+                        .size(35.dp)
+                        .clip(CircleShape)
+                        .background(if (isWishlisted) Color(0xFFFF9800) else Color(0x99000000))
+                        .padding(4.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isWishlisted) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                        contentDescription = "Wishlist",
                         tint = Color.White
                     )
                 }

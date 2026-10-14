@@ -15,20 +15,26 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Album
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Copyright
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.TypeSpecimen
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +50,8 @@ import coil.compose.AsyncImage
 import com.ryan.gameshelf.Game
 import com.ryan.gameshelf.R
 import com.ryan.gameshelf.User
+import com.ryan.gameshelf.api.UserRepository
+import kotlinx.coroutines.launch
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -164,34 +172,92 @@ fun GameDetailScreen(
 
         val isInCollection = user.collection.contains(game.id)
         val isFavorite = user.favorites.contains(game.id)
+        val isWishlisted = user.wishlist.contains(game.id)
+        var showCollectionDialog by remember { mutableStateOf(false) }
+        val orangeAccent = Color(0xFFFF9800)
 
-        // --- Boutons d'Action (Collection & Favori) ---
+        if (showCollectionDialog) {
+            AddToCollectionDialog(
+                game = game,
+                user = user,
+                onDismiss = { showCollectionDialog = false },
+                onSave = { platform, isPhysical, gameState, borrowed ->
+                    showCollectionDialog = false
+                    game.inCollection = true
+                    coroutineScope.launch {
+                        UserRepository.saveUserGameDetails(
+                            user = user,
+                            gameId = game.id,
+                            platform = platform,
+                            isPhysical = isPhysical,
+                            gameState = gameState,
+                            borrowed = borrowed
+                        )
+                    }
+                },
+                onRemove = {
+                    showCollectionDialog = false
+                    game.inCollection = false
+                    coroutineScope.launch {
+                        UserRepository.removeFromCollection(user, game.id)
+                    }
+                }
+            )
+        }
+
+        // --- Boutons d'Action (Collection, Wishlist & Favori) ---
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
         ) {
             // Bouton Collection
             Button(
-                onClick = { game.toggleCollection(user, coroutineScope) },
+                onClick = { showCollectionDialog = true },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isInCollection) blueAccent else Color.Transparent,
                     contentColor = Color.White
                 ),
                 border = BorderStroke(1.5.dp, blueAccent),
                 shape = RoundedCornerShape(24.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
                     imageVector = if (isInCollection) Icons.Filled.Check else Icons.Filled.Add,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = if (isInCollection) "DANS LA COLLECTION" else "COLLECTION",
-                    fontSize = 12.sp,
+                    text = if (isInCollection) "COLLECTION" else "COLLECTION",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // Bouton Wishlist
+            Button(
+                onClick = { game.toggleWishlist(user, coroutineScope) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isWishlisted) orangeAccent else Color.Transparent,
+                    contentColor = Color.White
+                ),
+                border = BorderStroke(1.5.dp, orangeAccent),
+                shape = RoundedCornerShape(24.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = if (isWishlisted) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "WISHLIST",
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -203,20 +269,21 @@ fun GameDetailScreen(
                     containerColor = if (isFavorite) pinkAccent else Color.Transparent,
                     contentColor = if (isFavorite) Color.Black else Color.White
                 ),
-                border = BorderStroke(1.5.dp, if (isFavorite) pinkAccent else blueAccent),
+                border = BorderStroke(1.5.dp, pinkAccent),
                 shape = RoundedCornerShape(24.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = null,
                     tint = if (isFavorite) Color.Red else Color.White,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "FAVORI",
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
             }

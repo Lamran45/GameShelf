@@ -4,19 +4,28 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -200,6 +209,25 @@ fun MainScreen(viewModel: GameView, user: User) {
                             indicatorColor = Color(0xFF2A2A2A)
                         )
                     )
+
+                    NavigationBarItem(
+                        selected = selectedTab == 3,
+                        onClick = { selectedTab = 3 },
+                        icon = {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Filled.Bookmark,
+                                contentDescription = "Wishlist"
+                            )
+                        },
+                        label = { Text("Wishlist") },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color(0xFFFF9800),
+                            selectedTextColor = Color(0xFFFF9800),
+                            unselectedIconColor = Color.Gray,
+                            unselectedTextColor = Color.Gray,
+                            indicatorColor = Color(0xFF2A2A2A)
+                        )
+                    )
                 }
             },
             containerColor = Color.Black
@@ -221,7 +249,11 @@ fun MainScreen(viewModel: GameView, user: User) {
                         viewModel = viewModel,
                         onGameClick = { game -> selectedGame = game }
                     )
-
+                    3 -> com.ryan.gameshelf.ui.WishlistScreen(
+                        user = user,
+                        viewModel = viewModel,
+                        onGameClick = { game -> selectedGame = game }
+                    )
                 }
             }
         }
@@ -265,9 +297,14 @@ fun CollectionScreen(
 ) {
     var loadedGames by remember { mutableStateOf<List<Game>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
+    var selectedFilter by remember { mutableStateOf("Tous") }
 
-    LaunchedEffect(user.collection.toList()) {
-        val missingIds = user.collection.filter { id -> loadedGames.none { game -> game.id == id } }
+    val allRelevantIds = remember(user.collection.toList(), user.favorites.toList(), user.gameDetails.toMap()) {
+        (user.collection + user.favorites + user.gameDetails.keys).distinct()
+    }
+
+    LaunchedEffect(allRelevantIds) {
+        val missingIds = allRelevantIds.filter { id -> loadedGames.none { game -> game.id == id } }
         if (missingIds.isNotEmpty()) {
             if (loadedGames.isEmpty()) {
                 isLoading = true
@@ -278,8 +315,21 @@ fun CollectionScreen(
         }
     }
 
-    val displayedGames = remember(loadedGames, user.collection.toList()) {
-        loadedGames.filter { user.collection.contains(it.id) }
+    val displayedGames = remember(loadedGames, allRelevantIds) {
+        loadedGames.filter { allRelevantIds.contains(it.id) }
+    }
+
+    val filteredGames = remember(displayedGames, user.favorites.toList(), user.collection.toList(), user.gameDetails.toMap(), selectedFilter) {
+        when (selectedFilter) {
+            "Favoris" -> displayedGames.filter { user.favorites.contains(it.id) || user.gameDetails[it.id]?.isFavorite == true }
+            "100%" -> displayedGames.filter { user.gameDetails[it.id]?.gameState.equals("100%", ignoreCase = true) }
+            "En cours" -> displayedGames.filter { user.gameDetails[it.id]?.gameState.equals("DOING", ignoreCase = true) }
+            "À faire" -> displayedGames.filter { user.gameDetails[it.id]?.gameState.equals("TODO", ignoreCase = true) }
+            "Fini" -> displayedGames.filter { user.gameDetails[it.id]?.gameState.equals("FINISHED", ignoreCase = true) }
+            "Physique" -> displayedGames.filter { user.gameDetails[it.id]?.physical == true }
+            "Dématérialisé" -> displayedGames.filter { user.gameDetails[it.id]?.physical == false }
+            else -> displayedGames.filter { user.collection.contains(it.id) || user.gameDetails[it.id]?.isInCollection == true }
+        }
     }
 
     Column(
@@ -292,8 +342,41 @@ fun CollectionScreen(
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
-            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+            modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
         )
+
+        // Filtres
+        val filters = listOf("Tous", "Favoris", "En cours", "À faire", "100%", "Fini", "Physique", "Dématérialisé")
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        ) {
+            items(filters) { filterLabel ->
+                val isSelected = selectedFilter == filterLabel
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(if (isSelected) Color(0xFF2196F3) else Color(0xFF1E1E1E))
+                        .border(
+                            width = 1.dp,
+                            color = if (isSelected) Color(0xFF2196F3) else Color.Gray.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .clickable { selectedFilter = filterLabel }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = filterLabel,
+                        fontSize = 12.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) Color.White else Color.LightGray
+                    )
+                }
+            }
+        }
 
         if (isLoading) {
             Box(
@@ -335,13 +418,25 @@ fun CollectionScreen(
                     )
                 }
             }
+        } else if (filteredGames.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Aucun jeu ne correspond au filtre \"$selectedFilter\".",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center
+                )
+            }
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 contentPadding = PaddingValues(4.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                itemsIndexed(displayedGames) { _, game ->
+                itemsIndexed(filteredGames) { _, game ->
                     GameItem(user, game, onGameClick = onGameClick)
                 }
             }
