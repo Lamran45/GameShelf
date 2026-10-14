@@ -94,4 +94,25 @@ class UserGameTest {
         assertFalse(row.isInCollection)
         assertFalse(row.isFavorite)
     }
+
+    @Test
+    fun testGameCategoryDefaults() {
+        val modGame = Game(id = 1, name = "Doom Mod", game_type = GameType(1, "Mod"))
+        val mainGame = Game(id = 2, name = "Tekken 8", game_type = GameType(2, "Main Game"))
+
+        val isModNonStandard = modGame.categoryLabel.let { type ->
+            val lower = type.lowercase().trim()
+            val standardKeywords = listOf("complet", "main", "dlc", "expansion", "bundle", "pack", "remake", "remaster")
+            standardKeywords.none { lower.contains(it) }
+        }
+
+        val isMainNonStandard = mainGame.categoryLabel.let { type ->
+            val lower = type.lowercase().trim()
+            val standardKeywords = listOf("complet", "main", "dlc", "expansion", "bundle", "pack", "remake", "remaster")
+            standardKeywords.none { lower.contains(it) }
+        }
+
+        assertTrue(isModNonStandard)
+        assertFalse(isMainNonStandard)
+    }
 }

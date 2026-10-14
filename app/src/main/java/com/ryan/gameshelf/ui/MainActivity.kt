@@ -3,6 +3,7 @@ package com.ryan.gameshelf
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -126,6 +127,14 @@ fun MainScreen(viewModel: GameView, user: User) {
     var selectedGame by remember { mutableStateOf<Game?>(null) }
     var groupTitle by remember { mutableStateOf<String?>(null) }
     var groupGameIds by remember { mutableStateOf<List<Long>>(emptyList()) }
+
+    BackHandler(enabled = groupTitle != null) {
+        groupTitle = null
+    }
+
+    BackHandler(enabled = groupTitle == null && selectedGame != null) {
+        selectedGame = null
+    }
 
     if (groupTitle != null) {
         GameGroupScreen(

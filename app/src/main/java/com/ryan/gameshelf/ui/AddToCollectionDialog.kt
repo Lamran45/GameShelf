@@ -47,6 +47,13 @@ private fun isPcPlatform(platformName: String): Boolean {
     return lower.contains("pc") || lower.contains("windows")
 }
 
+private fun isNonStandardGameType(typeStr: String?): Boolean {
+    if (typeStr.isNullOrBlank()) return false
+    val lower = typeStr.lowercase().trim()
+    val standardKeywords = listOf("complet", "main", "dlc", "expansion", "bundle", "pack", "remake", "remaster")
+    return standardKeywords.none { lower.contains(it) }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddToCollectionDialog(
@@ -102,7 +109,14 @@ fun AddToCollectionDialog(
     }
     var stateSliderIndex by remember { mutableFloatStateOf(initialIndex.toFloat()) }
 
-    var borrowed by remember { mutableStateOf(existing?.borrowed ?: false) }
+    var borrowed by remember(existing, game) {
+        if (existing?.borrowed != null) {
+            mutableStateOf(existing.borrowed)
+        } else {
+            val defaultBorrowed = isNonStandardGameType(game.categoryLabel)
+            mutableStateOf(defaultBorrowed)
+        }
+    }
 
     var platformDropdownExpanded by remember { mutableStateOf(false) }
     var storeDropdownExpanded by remember { mutableStateOf(false) }
