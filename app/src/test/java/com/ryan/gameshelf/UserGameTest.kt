@@ -143,4 +143,18 @@ class UserGameTest {
         assertTrue(user.wishlist.isEmpty())
         assertTrue(user.gameDetails.isEmpty())
     }
+
+    @Test
+    fun testProfileRowSerialization() {
+        val profile = com.ryan.gameshelf.api.ProfileRow(
+            id = "uuid-test-user",
+            username = "GamerPro"
+        )
+
+        val jsonString = Json.encodeToString(com.ryan.gameshelf.api.ProfileRow.serializer(), profile)
+        val decoded = Json.decodeFromString(com.ryan.gameshelf.api.ProfileRow.serializer(), jsonString)
+
+        assertEquals("uuid-test-user", decoded.id)
+        assertEquals("GamerPro", decoded.username)
+    }
 }

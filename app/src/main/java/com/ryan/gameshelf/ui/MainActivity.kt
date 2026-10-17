@@ -102,6 +102,7 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(loggedInUser?.uuid) {
                 loggedInUser?.let { u ->
                     UserRepository.loadUserGames(u)
+                    UserRepository.loadUserProfile(u)
                 }
             }
 

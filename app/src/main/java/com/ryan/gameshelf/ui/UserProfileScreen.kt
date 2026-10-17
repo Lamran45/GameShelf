@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,7 +33,18 @@ fun UserProfileScreen(
 ) {
     val coroutineScope = rememberCoroutineScope()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
+    var usernameState by remember(user.name) { mutableStateOf(user.name) }
+    var newUsernameInput by remember { mutableStateOf("") }
+    var isSavingUsername by remember { mutableStateOf(false) }
+
+    LaunchedEffect(user.uuid) {
+        if (user.uuid.isNotEmpty()) {
+            UserRepository.loadUserProfile(user)
+            usernameState = user.name
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -82,12 +94,33 @@ fun UserProfileScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = user.name.ifEmpty { "Joueur" },
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                // Pseudo centré avec icône Edit
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = usernameState.ifEmpty { "Joueur" },
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    IconButton(
+                        onClick = {
+                            newUsernameInput = usernameState
+                            showEditDialog = true
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Modifier le pseudo",
+                            tint = Color(0xFF2196F3),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(40.dp))
 
@@ -168,6 +201,84 @@ fun UserProfileScreen(
                 }
             }
         }
+    }
+
+    // Dialogue de modification du pseudo
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { if (!isSavingUsername) showEditDialog = false },
+            title = {
+                Text(
+                    text = "Modifier votre pseudo",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = newUsernameInput,
+                        onValueChange = { newUsernameInput = it },
+                        label = { Text("Pseudo", color = Color.Gray) },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF2196F3),
+                            unfocusedBorderColor = Color.Gray,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color(0xFF2196F3)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val trimmed = newUsernameInput.trim()
+                        if (trimmed.isNotEmpty()) {
+                            coroutineScope.launch {
+                                isSavingUsername = true
+                                try {
+                                    UserRepository.updateUsername(user, trimmed)
+                                    usernameState = user.name
+                                    showEditDialog = false
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                } finally {
+                                    isSavingUsername = false
+                                }
+                            }
+                        }
+                    },
+                    enabled = !isSavingUsername && newUsernameInput.trim().isNotEmpty()
+                ) {
+                    if (isSavingUsername) {
+                        CircularProgressIndicator(
+                            color = Color(0xFF2196F3),
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Valider",
+                            color = Color(0xFF2196F3),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showEditDialog = false },
+                    enabled = !isSavingUsername
+                ) {
+                    Text(text = "Annuler", color = Color.Gray)
+                }
+            },
+            containerColor = Color(0xFF1E1E1E),
+            shape = RoundedCornerShape(16.dp)
+        )
     }
 
     // Dialogue de confirmation de suppression de compte

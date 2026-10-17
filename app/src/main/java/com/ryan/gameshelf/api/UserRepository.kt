@@ -19,6 +19,12 @@ data class UserGameRow(
     @SerialName("physical") val physical: Boolean? = true
 )
 
+@Serializable
+data class ProfileRow(
+    @SerialName("id") val id: String,
+    @SerialName("username") val username: String? = null
+)
+
 object UserRepository {
 
     suspend fun loadUserGames(user: User) {
@@ -48,6 +54,39 @@ object UserRepository {
                     user.wishlist.add(row.igdbGameId)
                 }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun loadUserProfile(user: User) {
+        if (user.uuid.isEmpty()) return
+        try {
+            val profiles = supabase.from("profiles")
+                .select {
+                    filter {
+                        eq("id", user.uuid)
+                    }
+                }.decodeList<ProfileRow>()
+
+            val profile = profiles.firstOrNull()
+            if (profile?.username != null && profile.username.isNotBlank()) {
+                user.name = profile.username
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun updateUsername(user: User, newUsername: String) {
+        if (user.uuid.isEmpty()) return
+        val row = ProfileRow(
+            id = user.uuid,
+            username = newUsername
+        )
+        user.name = newUsername
+        try {
+            supabase.from("profiles").upsert(row)
         } catch (e: Exception) {
             e.printStackTrace()
         }
