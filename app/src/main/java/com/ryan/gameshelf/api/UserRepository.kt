@@ -159,4 +159,31 @@ object UserRepository {
             e.printStackTrace()
         }
     }
+
+    suspend fun deleteUserData(user: User) {
+        if (user.uuid.isEmpty()) return
+        try {
+            supabase.from("user_games").delete {
+                filter {
+                    eq("user_id", user.uuid)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        try{
+            supabase.from("profiles").delete {
+                filter{
+                    eq("id", user.uuid)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        user.collection.clear()
+        user.favorites.clear()
+        user.wishlist.clear()
+        user.gameDetails.clear()
+    }
 }

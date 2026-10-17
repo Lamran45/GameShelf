@@ -25,7 +25,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
@@ -33,6 +36,7 @@ import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -58,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import com.ryan.gameshelf.api.ApiService
 import com.ryan.gameshelf.api.AuthService
 import com.ryan.gameshelf.api.UserRepository
+import com.ryan.gameshelf.ui.UserProfileScreen
 import com.ryan.gameshelf.api.supabase
 import com.ryan.gameshelf.ui.AuthScreen
 import com.ryan.gameshelf.ui.GameDetailScreen
@@ -127,16 +132,26 @@ fun MainScreen(viewModel: GameView, user: User) {
     var selectedGame by remember { mutableStateOf<Game?>(null) }
     var groupTitle by remember { mutableStateOf<String?>(null) }
     var groupGameIds by remember { mutableStateOf<List<Long>>(emptyList()) }
+    var showProfile by remember { mutableStateOf(false) }
 
-    BackHandler(enabled = groupTitle != null) {
+    BackHandler(enabled = showProfile) {
+        showProfile = false
+    }
+
+    BackHandler(enabled = !showProfile && groupTitle != null) {
         groupTitle = null
     }
 
-    BackHandler(enabled = groupTitle == null && selectedGame != null) {
+    BackHandler(enabled = !showProfile && groupTitle == null && selectedGame != null) {
         selectedGame = null
     }
 
-    if (groupTitle != null) {
+    if (showProfile) {
+        UserProfileScreen(
+            user = user,
+            onBackClick = { showProfile = false }
+        )
+    } else if (groupTitle != null) {
         GameGroupScreen(
             title = groupTitle!!,
             gameIds = groupGameIds,
@@ -256,7 +271,8 @@ fun MainScreen(viewModel: GameView, user: User) {
                     2 -> CollectionScreen(
                         user = user,
                         viewModel = viewModel,
-                        onGameClick = { game -> selectedGame = game }
+                        onGameClick = { game -> selectedGame = game },
+                        onProfileClick = { showProfile = true }
                     )
                     3 -> com.ryan.gameshelf.ui.WishlistScreen(
                         user = user,
@@ -302,7 +318,8 @@ fun GameHomeScreen(
 fun CollectionScreen(
     user: User,
     viewModel: GameView,
-    onGameClick: (Game) -> Unit
+    onGameClick: (Game) -> Unit,
+    onProfileClick: () -> Unit = {}
 ) {
     var loadedGames by remember { mutableStateOf<List<Game>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
@@ -346,13 +363,34 @@ fun CollectionScreen(
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        Text(
-            text = "Ma Collection",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp, start = 4.dp, end = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Ma Collection",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+
+            IconButton(
+                onClick = onProfileClick,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF2196F3))
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.AccountCircle,
+                    contentDescription = "Profil utilisateur",
+                    tint = Color.White
+                )
+            }
+        }
 
         // Filtres
         val filters = listOf("Tous", "Favoris", "En cours", "À faire", "100%", "Fini", "Physique", "Dématérialisé")

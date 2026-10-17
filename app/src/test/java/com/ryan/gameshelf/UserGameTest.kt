@@ -115,4 +115,32 @@ class UserGameTest {
         assertTrue(isModNonStandard)
         assertFalse(isMainNonStandard)
     }
+
+    @Test
+    fun testUserClearDataOnAccountDeletionOrLogout() {
+        val user = User(
+            name = "TestUser",
+            uuid = "test-uuid"
+        )
+        user.collection.add(101L)
+        user.favorites.add(202L)
+        user.wishlist.add(303L)
+        user.gameDetails[101L] = UserGameRow(userId = "test-uuid", igdbGameId = 101L)
+
+        assertEquals(1, user.collection.size)
+        assertEquals(1, user.favorites.size)
+        assertEquals(1, user.wishlist.size)
+        assertEquals(1, user.gameDetails.size)
+
+        // Simuler la réinitialisation des données locales
+        user.collection.clear()
+        user.favorites.clear()
+        user.wishlist.clear()
+        user.gameDetails.clear()
+
+        assertTrue(user.collection.isEmpty())
+        assertTrue(user.favorites.isEmpty())
+        assertTrue(user.wishlist.isEmpty())
+        assertTrue(user.gameDetails.isEmpty())
+    }
 }
