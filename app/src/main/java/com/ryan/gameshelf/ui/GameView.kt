@@ -68,4 +68,8 @@ class GameView(private val apiserv: ApiService): ViewModel(){
     suspend fun getGamesByIds(ids: List<Long>): List<Game> {
         return apiserv.getGamesByIDs(ids)
     }
+
+    suspend fun getGameTimeToBeat(gameId: Long): com.ryan.gameshelf.IgdbTimeToBeat? {
+        return apiserv.getGameTimeToBeat(gameId)
+    }
 }

@@ -165,6 +165,7 @@ fun MainScreen(viewModel: GameView, user: User) {
         GameDetailScreen(
             game = selectedGame!!,
             user = user,
+            viewModel = viewModel,
             onBackClick = { selectedGame = null },
             onGameGroupClick = { title, ids ->
                 groupTitle = title

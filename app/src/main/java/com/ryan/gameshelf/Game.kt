@@ -52,6 +52,14 @@ data class Genre(
 )
 
 @Serializable
+data class IgdbTimeToBeat(
+    val id: Long = 0,
+    val hastily: Int? = null,
+    val normally: Int? = null,
+    val completely: Int? = null
+)
+
+@Serializable
 data class Game(
     val id: Long = 0,
     val name: String,
@@ -68,7 +76,8 @@ data class Game(
     val expansions: List<Long>? = null,
     val standalone_expansions: List<Long>? = null,
     val rating: Double = 0.0,
-    val similar_games: List<Long>? = null
+    val similar_games: List<Long>? = null,
+    var game_time_to_beats: IgdbTimeToBeat? = null
 ) {
     var favorite by mutableStateOf(false)
     var inCollection by mutableStateOf(false)
@@ -143,6 +152,29 @@ data class Game(
             standalone_expansions?.let { ids.addAll(it) }
             return ids.distinct()
         }
+
+    val mainStoryFormatted: String
+        get() = formatTimeToBeat(game_time_to_beats?.hastily)
+
+    val mainExtraFormatted: String
+        get() = formatTimeToBeat(game_time_to_beats?.normally)
+
+    val completionistFormatted: String
+        get() = formatTimeToBeat(game_time_to_beats?.completely)
+
+    val hasTimeToBeatData: Boolean
+        get() = (game_time_to_beats?.hastily ?: 0) > 0 ||
+                (game_time_to_beats?.normally ?: 0) > 0 ||
+                (game_time_to_beats?.completely ?: 0) > 0
+
+    companion object {
+        fun formatTimeToBeat(seconds: Int?): String {
+            if (seconds == null || seconds <= 0) return "--"
+            if (seconds < 3600) return "${seconds / 60} min"
+            val hours = seconds / 3600.0
+            return if (hours % 1 == 0.0) "${hours.toInt()}h" else String.format(Locale.FRENCH, "%.1fh", hours)
+        }
+    }
 
     fun toggleFav(user: User, coroutineScope: CoroutineScope? = null) {
         if (user.favorites.contains(id)) {

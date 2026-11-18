@@ -55,7 +55,7 @@ fun GameGroupScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp, top = 8.dp)
+                .padding(bottom = 16.dp, top = 10.dp)
         ) {
             IconButton(
                 onClick = onBackClick,

@@ -2,6 +2,7 @@ package com.ryan.gameshelf.api
 
 import com.ryan.gameshelf.BuildConfig
 import com.ryan.gameshelf.Game
+import com.ryan.gameshelf.IgdbTimeToBeat
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -13,6 +14,7 @@ import kotlinx.serialization.json.Json
 
 class ApiService (val authserv: AuthService) {
     val baseurlgame = "https://api.igdb.com/v4/games"
+    val baseurlTimeToBeat = "https://api.igdb.com/v4/game_time_to_beats"
     private var accessToken : String? =  null
 
     var requestGameavailability: Boolean = true
@@ -66,7 +68,7 @@ class ApiService (val authserv: AuthService) {
         //Il y a environ 3 mois et trois mois plus tard
         val threeMonthLaterTimeStamp = currentTimestampSeconds + 15552000
         val threeMonthsAgoTimestamp = currentTimestampSeconds - 15552000
-        val igdbQueryHome = "fields id, name, summary, cover.image_id, game_type.type, franchise.name, franchise.games, franchises.name, franchises.games, genres.name, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, dlcs, expansions, standalone_expansions, rating, similar_games; limit 20; offset $offset; where first_release_date != null & first_release_date <= $threeMonthLaterTimeStamp & first_release_date >= $threeMonthsAgoTimestamp & hypes > 5;"
+        val igdbQueryHome = "fields id, name, summary, cover.image_id, game_type.type, franchise.name, franchise.games, franchises.name, franchises.games, genres.name, first_release_date, platforms.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher, dlcs, expansions, standalone_expansions, rating, similar_games; limit 20; offset $offset; where first_release_date != null & first_release_date <= $threeMonthLaterTimeStamp & first_release_date >= $threeMonthsAgoTimestamp & hypes > 10;"
 
          try{
              val response: List<Game> = client.post(baseurlgame) {
@@ -106,5 +108,24 @@ class ApiService (val authserv: AuthService) {
             emptyList() // On renvoie une liste vide si ça échoue
         }
 
+    }
+
+    suspend fun getGameTimeToBeat(gameId: Long): IgdbTimeToBeat? {
+        if (gameId <= 0) return null
+        init()
+        val queryBody = "where game_id = $gameId; fields game_id, hastily, normally, completely;"
+
+        return try {
+            val response: List<IgdbTimeToBeat> = client.post(baseurlTimeToBeat) {
+                header("Client-ID", clientId)
+                header("Authorization", "Bearer $accessToken")
+                setBody(queryBody)
+            }.body()
+
+            response.firstOrNull()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }

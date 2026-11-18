@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Bookmark
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.ryan.gameshelf.Game
+import com.ryan.gameshelf.IgdbTimeToBeat
 import com.ryan.gameshelf.R
 import com.ryan.gameshelf.User
 import com.ryan.gameshelf.api.UserRepository
@@ -58,6 +61,7 @@ import kotlinx.coroutines.launch
 fun GameDetailScreen(
     game: Game,
     user: User,
+    viewModel: GameView? = null,
     onBackClick: () -> Unit,
     onGameGroupClick: ((String, List<Long>) -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -68,6 +72,23 @@ fun GameDetailScreen(
     val darkBackground = Color(0xFF121212)
     val cardBackground = Color(0xFF1E1E1E)
     val pinkAccent = Color(0xFFF8BADC)
+
+    var timeToBeatData by remember(game.id) { mutableStateOf(game.game_time_to_beats) }
+    var isLoadingTimeToBeat by remember(game.id) { mutableStateOf(game.game_time_to_beats == null) }
+
+    LaunchedEffect(game.id) {
+        if (timeToBeatData == null && viewModel != null) {
+            isLoadingTimeToBeat = true
+            val fetched = viewModel.getGameTimeToBeat(game.id)
+            if (fetched != null) {
+                game.game_time_to_beats = fetched
+                timeToBeatData = fetched
+            }
+            isLoadingTimeToBeat = false
+        } else {
+            isLoadingTimeToBeat = false
+        }
+    }
 
     Column(
         modifier = modifier
@@ -291,6 +312,17 @@ fun GameDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // --- Durée de vie ---
+        HowLongToBeatCard(
+            game = game,
+            timeToBeatData = timeToBeatData,
+            isLoading = isLoadingTimeToBeat,
+            blueAccent = blueAccent,
+            cardBackground = cardBackground
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // --- Fiches d'Informations (Plateformes, Éditeur, Date) ---
         Text(
             text = "Informations",
@@ -478,5 +510,134 @@ private fun InfoRow(
                 modifier = Modifier.padding(start = 4.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun HowLongToBeatCard(
+    game: Game,
+    timeToBeatData: IgdbTimeToBeat?,
+    isLoading: Boolean,
+    blueAccent: Color,
+    cardBackground: Color
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.AccessTime,
+                contentDescription = null,
+                tint = blueAccent,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Durée de vie",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = cardBackground),
+            border = BorderStroke(1.dp, blueAccent.copy(alpha = 0.6f)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = blueAccent,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                }
+            } else {
+                val mainFormatted = Game.formatTimeToBeat(timeToBeatData?.hastily)
+                val mainExtraFormatted = Game.formatTimeToBeat(timeToBeatData?.normally)
+                val completionistFormatted = Game.formatTimeToBeat(timeToBeatData?.completely)
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp, horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HltbCategoryColumn(
+                        title = "Main",
+                        duration = mainFormatted,
+                        accentColor = blueAccent,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .height(44.dp)
+                            .width(1.dp)
+                            .background(blueAccent.copy(alpha = 0.2f))
+                    )
+
+                    HltbCategoryColumn(
+                        title = "Main + Extra",
+                        duration = mainExtraFormatted,
+                        accentColor = Color(0xFFFF9800),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .height(44.dp)
+                            .width(1.dp)
+                            .background(blueAccent.copy(alpha = 0.2f))
+                    )
+
+                    HltbCategoryColumn(
+                        title = "100%",
+                        duration = completionistFormatted,
+                        accentColor = Color(0xFF4CAF50),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HltbCategoryColumn(
+    title: String,
+    duration: String,
+    accentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = modifier
+    ) {
+        Text(
+            text = title,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.White,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = duration,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (duration != "--") accentColor else Color.Gray,
+            textAlign = TextAlign.Center
+        )
     }
 }

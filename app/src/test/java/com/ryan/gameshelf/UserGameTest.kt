@@ -157,4 +157,73 @@ class UserGameTest {
         assertEquals("uuid-test-user", decoded.id)
         assertEquals("GamerPro", decoded.username)
     }
+
+    @Test
+    fun testFormatTimeToBeat() {
+        assertEquals("--", Game.formatTimeToBeat(null))
+        assertEquals("--", Game.formatTimeToBeat(0))
+        assertEquals("--", Game.formatTimeToBeat(-100))
+        assertEquals("30 min", Game.formatTimeToBeat(1800))
+        assertEquals("1h", Game.formatTimeToBeat(3600))
+        assertEquals("1,5h", Game.formatTimeToBeat(5400).replace(".", ","))
+        assertEquals("10h", Game.formatTimeToBeat(36000))
+    }
+
+    @Test
+    fun testIgdbTimeToBeatFormatting() {
+        val gameWithHltb = Game(
+            id = 12,
+            name = "The Legend of Zelda: Tears of the Kingdom",
+            game_time_to_beats = IgdbTimeToBeat(
+                id = 99,
+                hastily = 180000,   // 50h
+                normally = 270000,  // 75h
+                completely = 540000 // 150h
+            )
+        )
+
+        assertTrue(gameWithHltb.hasTimeToBeatData)
+        assertEquals("50h", gameWithHltb.mainStoryFormatted)
+        assertEquals("75h", gameWithHltb.mainExtraFormatted)
+        assertEquals("150h", gameWithHltb.completionistFormatted)
+    }
+
+    @Test
+    fun testGameTimeToBeatMissingData() {
+        val gameWithoutHltb = Game(
+            id = 13,
+            name = "Indie Game",
+            game_time_to_beats = null
+        )
+
+        assertFalse(gameWithoutHltb.hasTimeToBeatData)
+        assertEquals("--", gameWithoutHltb.mainStoryFormatted)
+        assertEquals("--", gameWithoutHltb.mainExtraFormatted)
+        assertEquals("--", gameWithoutHltb.completionistFormatted)
+    }
+
+    @Test
+    fun testGameTimeToBeatSerialization() {
+        val game = Game(
+            id = 42,
+            name = "Elden Ring",
+            game_time_to_beats = IgdbTimeToBeat(
+                id = 100,
+                hastily = 198000, // 55h
+                normally = 360000, // 100h
+                completely = 478800 // 133h
+            )
+        )
+
+        val json = Json { ignoreUnknownKeys = true }
+        val jsonString = json.encodeToString(Game.serializer(), game)
+        val decoded = json.decodeFromString(Game.serializer(), jsonString)
+
+        assertEquals(42L, decoded.id)
+        assertEquals("Elden Ring", decoded.name)
+        assertTrue(decoded.hasTimeToBeatData)
+        assertEquals(198000, decoded.game_time_to_beats?.hastily)
+        assertEquals("55h", decoded.mainStoryFormatted)
+        assertEquals("100h", decoded.mainExtraFormatted)
+    }
 }
